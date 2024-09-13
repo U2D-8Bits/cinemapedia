@@ -5,7 +5,7 @@ class MovieMapper {
   static Movie movieDBToEntity(MovieMoviedb moviedb) => Movie(
       adult: moviedb.adult,
       backdropPath: (moviedb.backdropPath != '')
-          ? 'https://image.tmdb.org/t/p/w500{moviedb.backdropPath}'
+          ? 'https://image.tmdb.org/t/p/w500${moviedb.backdropPath}'
           : 'https://www.its.ac.id/tmesin/wp-content/uploads/sites/22/2022/07/no-image.png',
       genreIds: moviedb.genreIds.map((e) => e.toString()).toList(),
       id: moviedb.id,
