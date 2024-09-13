@@ -33,7 +33,6 @@ class _HomeViewState extends ConsumerState<_HomeView> {
     super.initState();
 
     ref.read(nowPlayingMoviesProvider.notifier).loadNextPage();
-    ref.read(moviesSlideshowProvide);
   }
 
   @override
