@@ -38,26 +38,24 @@ class _HomeViewState extends ConsumerState<_HomeView> {
 
   @override
   Widget build(BuildContext context) {
+    final initialLoading = ref.watch(initialLoadingProvider);
+    if (initialLoading) return const FullScreenLoader();
+
     final nowPlayingMovies = ref.watch(nowPlayingMoviesProvider);
     final moviesSlideshowProvider = ref.watch(moviesSlideshowProvide);
     final popularMovies = ref.watch(popularMoviesProvider);
     final upcomingMovies = ref.watch(upcomingMoviesProvider);
     final topRatedMovies = ref.watch(topRatedMoviesProvider);
 
-    return FullScreenLoader();
-
     return CustomScrollView(
-
-
       slivers: [
         const SliverAppBar(
           floating: true,
-          flexibleSpace: FlexibleSpaceBar(
-            centerTitle: true,
-            title: CustomAppbar()
-          ),
+          flexibleSpace:
+              FlexibleSpaceBar(centerTitle: true, title: CustomAppbar()),
         ),
-        SliverList(delegate: SliverChildBuilderDelegate((context, index) {
+        SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
           return Column(
             children: [
               // const CustomAppbar(),
@@ -92,9 +90,7 @@ class _HomeViewState extends ConsumerState<_HomeView> {
               const SizedBox(height: 10),
             ],
           );
-        },
-        childCount: 1
-        )),
+        }, childCount: 1)),
       ],
     );
   }
