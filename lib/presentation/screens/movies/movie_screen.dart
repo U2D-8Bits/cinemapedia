@@ -1,3 +1,5 @@
+
+import 'package:animate_do/animate_do.dart';
 import 'package:cinemapedia/domain/entities/movie.dart';
 import 'package:cinemapedia/presentation/providers/movies/movie_details_provider.dart';
 import 'package:flutter/material.dart';
@@ -73,18 +75,22 @@ class _CustomSliverAppBar extends StatelessWidget {
             const Icon(Icons.arrow_back_ios_new_outlined, color: Colors.white),
         onPressed: () => context.pop(),
       ),
+      actions: [
+        // IconButton(
+        //   icon: const Icon(Icons.share_outlined, color: Colors.white),
+        //   onPressed: () {},
+        // ),
+        IconButton(
+          icon: const Icon(Icons.favorite_border, color: Colors.white),
+          onPressed: () {},
+        ),
+      ],
       backgroundColor: Colors.black,
       expandedHeight: sizePhone.height * 0.7,
       foregroundColor: Colors.white,
       flexibleSpace: FlexibleSpaceBar(
-          titlePadding: EdgeInsets.symmetric(horizontal: 10),
-          title: Text(
-            movie.title,
-            style: const TextStyle(
-                color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-            textAlign: TextAlign.start,
-          ),
-          background: _CustomStackAppBar(movie: movie)),
+          background: _CustomStackAppBar(movie: movie)
+      ),
     );
   }
 }
@@ -105,7 +111,23 @@ class _CustomStackAppBar extends StatelessWidget {
           child: Image.network(
             movie.posterPath,
             fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+
+              if( loadingProgress != null) return const SizedBox();
+
+              return FadeIn(child: child);
+
+            },
           ),
+        ),
+        const SizedBox.expand(
+          child: DecoratedBox(
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      stops: [0.7, 1.0],
+                      colors: [Colors.transparent, Colors.black54]))),
         ),
         const SizedBox.expand(
           child: DecoratedBox(
@@ -137,11 +159,15 @@ class _MovieDetails extends StatefulWidget {
   const _MovieDetails({required this.movie});
 
   @override
-  State<_MovieDetails> createState() => _MovieDetailsState();
+  // ignore: no_logic_in_create_state
+  State<_MovieDetails> createState() => _MovieDetailsState(movieId: movie.id.toString());
 }
 
 class _MovieDetailsState extends State<_MovieDetails> {
   bool _showFullText = false;
+  final String movieId;
+
+  _MovieDetailsState({required this.movieId});
 
   @override
   Widget build(BuildContext context) {
@@ -257,9 +283,80 @@ class _MovieDetailsState extends State<_MovieDetails> {
             ],
           ),
         ),
-
-        const SizedBox(height: 250),
+        _ActorsByMovie(movieId: movieId ),
+        const SizedBox(height: 20),
       ],
+    );
+  }
+}
+
+
+class _ActorsByMovie extends ConsumerWidget {
+
+  final String movieId;
+  const _ActorsByMovie({required this.movieId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+
+    final actorByMovie = ref.watch(actorsByMovieProvider);
+
+    if( actorByMovie[movieId] == null ){
+      return const Center(
+        child: CircularProgressIndicator(strokeWidth: 2,),
+      );
+    }
+
+    final actors = actorByMovie[movieId]!;
+
+    return SizedBox(
+      height: 300,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: actors.length,
+        itemBuilder: (context, index){
+          final actor = actors[index];
+          return Container(
+            padding: const EdgeInsets.all(8),
+            width: 135,
+            child: FadeInRight(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Actor Photo con desplazamiento horizontal
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.network(
+                      actor.profilePath,
+                      height: 180,
+                      width: 135,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  // Nombre del Actor
+                  Text(
+                    actor.name,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 5),
+                  // Personaje del Actor
+                  Text(
+                    actor.character ?? '',
+                    style: const TextStyle(fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    
+                  ),
+                  
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
