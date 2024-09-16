@@ -79,6 +79,6 @@ class MoviedbDatasource extends MoviesDataSource {
       'query': query,
     });
 
-    return returnMoviesList(response);
+    return returnMoviesList(response.data);
   }
 }
