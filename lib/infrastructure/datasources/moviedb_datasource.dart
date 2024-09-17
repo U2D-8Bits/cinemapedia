@@ -74,11 +74,10 @@ class MoviedbDatasource extends MoviesDataSource {
   
   @override
   Future<List<Movie>> searchMovies(String query) async {
-
     final response = await dio.get('/search/movie', queryParameters: {
       'query': query,
     });
 
-    return returnMoviesList(response.data);
+    return returnMoviesList(response);
   }
 }

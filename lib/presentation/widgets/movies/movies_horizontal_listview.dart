@@ -1,6 +1,5 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:cinemapedia/config/helpers/human_formats.dart';
-import 'package:cinemapedia/config/router/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -20,28 +19,24 @@ class MovieHorizontalListview extends StatefulWidget {
       this.loadNextPage});
 
   @override
-  State<MovieHorizontalListview> createState() => _MovieHorizontalListviewState();
+  State<MovieHorizontalListview> createState() =>
+      _MovieHorizontalListviewState();
 }
 
-
-
 class _MovieHorizontalListviewState extends State<MovieHorizontalListview> {
-
-  final scrollController =ScrollController();
-
+  final scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    
-    scrollController.addListener( (){
-      if( widget.loadNextPage == null ) return;
 
+    scrollController.addListener(() {
+      if (widget.loadNextPage == null) return;
 
-      if( scrollController.position.pixels + 200 >= scrollController.position.maxScrollExtent ){
+      if (scrollController.position.pixels + 200 >=
+          scrollController.position.maxScrollExtent) {
         widget.loadNextPage!();
       }
-
     });
   }
 
@@ -50,7 +45,6 @@ class _MovieHorizontalListviewState extends State<MovieHorizontalListview> {
     scrollController.dispose();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +64,8 @@ class _MovieHorizontalListviewState extends State<MovieHorizontalListview> {
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
                 itemBuilder: (context, index) {
-                  return FadeInRight(child: _Slide(movie: widget.movies[index]));
+                  return FadeInRight(
+                      child: _Slide(movie: widget.movies[index]));
                 }),
           ),
         ],
@@ -78,12 +73,6 @@ class _MovieHorizontalListviewState extends State<MovieHorizontalListview> {
     );
   }
 }
-
-
-
-
-
-
 
 class _Title extends StatelessWidget {
   final String? title;
@@ -113,9 +102,6 @@ class _Title extends StatelessWidget {
   }
 }
 
-
-
-
 class _Slide extends StatelessWidget {
   final Movie movie;
 
@@ -123,16 +109,14 @@ class _Slide extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final textStyle = Theme.of(context).textTheme;
 
     return Container(
       padding: const EdgeInsets.only(top: 10),
-      margin: const EdgeInsets.symmetric( horizontal: 8.0),
+      margin: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          
           SizedBox(
             width: 150,
             child: ClipRRect(
@@ -143,26 +127,25 @@ class _Slide extends StatelessWidget {
                 height: 220,
                 width: 150,
                 loadingBuilder: (context, child, loadingProgress) {
-                  if ( loadingProgress != null ){
+                  if (loadingProgress != null) {
                     return const Padding(
                       padding: EdgeInsets.all(8.0),
-                      child: Center(child: CircularProgressIndicator( strokeWidth: 2)),
+                      child: Center(
+                          child: CircularProgressIndicator(strokeWidth: 2)),
                     );
                   }
 
                   return GestureDetector(
-                    onTap: () => context.push('/movie/${ movie.id }'),
+                    onTap: () => context.push('/movie/${movie.id}'),
                     child: FadeIn(child: child),
                   );
-                   
                 },
               ),
             ),
           ),
-
-
-          const SizedBox(height: 5,),
-
+          const SizedBox(
+            height: 5,
+          ),
           SizedBox(
             width: 150,
             child: Text(
@@ -172,20 +155,26 @@ class _Slide extends StatelessWidget {
               style: textStyle.titleSmall,
             ),
           ),
-
           SizedBox(
             width: 150,
             child: Row(
               children: [
-                const Icon(Icons.star_half_outlined, size: 25, color: Color.fromARGB(255, 227, 194, 8)),
+                const Icon(Icons.star_half_outlined,
+                    size: 25, color: Color.fromARGB(255, 227, 194, 8)),
                 const SizedBox(width: 3),
-                Text( '${ movie.voteAverage }', style: textStyle.bodyMedium?.copyWith( color: const Color.fromARGB(255, 227, 194, 8)  ), ),
+                Text(
+                  '${movie.voteAverage}',
+                  style: textStyle.bodyMedium
+                      ?.copyWith(color: const Color.fromARGB(255, 227, 194, 8)),
+                ),
                 const Spacer(),
-                Text( HumanFormats.number(movie.popularity), style: textStyle.bodySmall, )
+                Text(
+                  HumanFormats.number(movie.popularity),
+                  style: textStyle.bodySmall,
+                )
               ],
             ),
           )
-
         ],
       ),
     );
