@@ -23,6 +23,9 @@ class MovieHorizontalListview extends StatefulWidget {
       _MovieHorizontalListviewState();
 }
 
+// -------------------------------------------------------------------------
+// ----------------- MOVIE HORIZONTAL LISTVIEW STATE ------------------------
+// -------------------------------------------------------------------------
 class _MovieHorizontalListviewState extends State<MovieHorizontalListview> {
   final scrollController = ScrollController();
 
@@ -74,6 +77,9 @@ class _MovieHorizontalListviewState extends State<MovieHorizontalListview> {
   }
 }
 
+// -------------------------------------------------------------------------
+// ----------------- MOVIE HORIZONTAL LISTVIEW WIDGETS -----------------------
+// -------------------------------------------------------------------------
 class _Title extends StatelessWidget {
   final String? title;
   final String? subtitle;
@@ -102,6 +108,9 @@ class _Title extends StatelessWidget {
   }
 }
 
+// -------------------------------------------------------------------------
+// ----------------- Slide WIDGET ------------------------------------------
+// -------------------------------------------------------------------------
 class _Slide extends StatelessWidget {
   final Movie movie;
 

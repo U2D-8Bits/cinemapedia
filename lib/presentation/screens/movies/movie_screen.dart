@@ -1,5 +1,6 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:cinemapedia/domain/entities/movie.dart';
+import 'package:cinemapedia/domain/repositories/local_storage_repository.dart';
 import 'package:cinemapedia/presentation/providers/movies/movie_details_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,13 +60,25 @@ class MovieScreenState extends ConsumerState<MovieScreen> {
   }
 }
 
-class _CustomSliverAppBar extends StatelessWidget {
+// --------------------------------------------------------------------------
+// -------------------------- AppBar Personalizado --------------------------
+// --------------------------------------------------------------------------
+
+
+final isFavoriteProvider = FutureProvider.family.autoDispose( (ref, int movieId){
+  final localStorageRepository = ref.watch(localStorageRepositoryProvider);
+  return localStorageRepository.isFavoriteMovie(movieId);
+});
+
+class _CustomSliverAppBar extends ConsumerWidget {
   final Movie movie;
 
   const _CustomSliverAppBar({required this.movie});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+
+    final isFavoriteFuture = ref.watch(isFavoriteProvider(movie.id));
     final sizePhone = MediaQuery.of(context).size;
 
     return SliverAppBar(
@@ -76,9 +89,17 @@ class _CustomSliverAppBar extends StatelessWidget {
       ),
       actions: [
         IconButton(
-          onPressed: () {},
-          // icon: Icon( Icons.favorite_border_outlined, color: Colors.white),
-          icon: const Icon(Icons.favorite_outlined, color: Colors.red),
+          onPressed: () async {
+            await ref.watch(localStorageRepositoryProvider).toggleFavorite(movie);
+            ref.invalidate(isFavoriteProvider(movie.id));
+          },
+          icon: isFavoriteFuture.when(
+            loading: () => const CircularProgressIndicator(strokeWidth: 2),
+            data: (isFavorite) => isFavorite
+                ? const Icon(Icons.favorite_outlined, color: Colors.red)
+                : const Icon(Icons.favorite_border_outlined, color: Colors.white),
+            error: (error, _) => const Icon(Icons.favorite_border_outlined, color: Colors.white),
+            ),
         ),
       ],
       backgroundColor: Colors.black,
@@ -90,6 +111,9 @@ class _CustomSliverAppBar extends StatelessWidget {
   }
 }
 
+// --------------------------------------------------------------------------
+// -------------------------- Stack Personalizado ---------------------------
+// --------------------------------------------------------------------------
 class _CustomStackAppBar extends StatelessWidget {
   const _CustomStackAppBar({
     super.key,
@@ -134,6 +158,9 @@ class _CustomStackAppBar extends StatelessWidget {
   }
 }
 
+// --------------------------------------------------------------------------
+// -------------------------- Detalles de la Película ------------------------
+// --------------------------------------------------------------------------
 class _MovieDetails extends StatefulWidget {
   final Movie movie;
   const _MovieDetails({required this.movie});
@@ -268,6 +295,10 @@ class _MovieDetailsState extends State<_MovieDetails> {
   }
 }
 
+
+// --------------------------------------------------------------------------
+// -------------------------- Actores por Película --------------------------
+// --------------------------------------------------------------------------
 class _ActorsByMovie extends ConsumerWidget {
   final String movieId;
   const _ActorsByMovie({required this.movieId});
@@ -338,6 +369,11 @@ class _ActorsByMovie extends ConsumerWidget {
   }
 }
 
+
+
+// --------------------------------------------------------------------------
+// -------------------------- Gradiente Personalizado -----------------------
+// --------------------------------------------------------------------------
 class _CustomGradient extends StatelessWidget {
   final Alignment begin;
   final Alignment end;
