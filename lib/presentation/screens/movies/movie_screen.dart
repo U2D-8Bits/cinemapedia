@@ -1,6 +1,6 @@
-
 import 'package:animate_do/animate_do.dart';
 import 'package:cinemapedia/domain/entities/movie.dart';
+import 'package:cinemapedia/domain/repositories/local_storage_repository.dart';
 import 'package:cinemapedia/presentation/providers/movies/movie_details_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,13 +60,25 @@ class MovieScreenState extends ConsumerState<MovieScreen> {
   }
 }
 
-class _CustomSliverAppBar extends StatelessWidget {
+// --------------------------------------------------------------------------
+// -------------------------- AppBar Personalizado --------------------------
+// --------------------------------------------------------------------------
+
+
+final isFavoriteProvider = FutureProvider.family.autoDispose( (ref, int movieId){
+  final localStorageRepository = ref.watch(localStorageRepositoryProvider);
+  return localStorageRepository.isFavoriteMovie(movieId);
+});
+
+class _CustomSliverAppBar extends ConsumerWidget {
   final Movie movie;
 
   const _CustomSliverAppBar({required this.movie});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+
+    final isFavoriteFuture = ref.watch(isFavoriteProvider(movie.id));
     final sizePhone = MediaQuery.of(context).size;
 
     return SliverAppBar(
@@ -76,25 +88,32 @@ class _CustomSliverAppBar extends StatelessWidget {
         onPressed: () => context.pop(),
       ),
       actions: [
-        // IconButton(
-        //   icon: const Icon(Icons.share_outlined, color: Colors.white),
-        //   onPressed: () {},
-        // ),
         IconButton(
-          icon: const Icon(Icons.favorite_border, color: Colors.white),
-          onPressed: () {},
+          onPressed: () async {
+            await ref.watch(favoriteMoviesProvider.notifier).toggleFavorite(movie);
+            ref.invalidate(isFavoriteProvider(movie.id));
+          },
+          icon: isFavoriteFuture.when(
+            loading: () => const CircularProgressIndicator(strokeWidth: 2),
+            data: (isFavorite) => isFavorite
+                ? const Icon(Icons.favorite_outlined, color: Colors.red)
+                : const Icon(Icons.favorite_border_outlined, color: Colors.white),
+            error: (error, _) => const Icon(Icons.favorite_border_outlined, color: Colors.white),
+            ),
         ),
       ],
       backgroundColor: Colors.black,
       expandedHeight: sizePhone.height * 0.7,
       foregroundColor: Colors.white,
-      flexibleSpace: FlexibleSpaceBar(
-          background: _CustomStackAppBar(movie: movie)
-      ),
+      flexibleSpace:
+          FlexibleSpaceBar(background: _CustomStackAppBar(movie: movie)),
     );
   }
 }
 
+// --------------------------------------------------------------------------
+// -------------------------- Stack Personalizado ---------------------------
+// --------------------------------------------------------------------------
 class _CustomStackAppBar extends StatelessWidget {
   const _CustomStackAppBar({
     super.key,
@@ -112,55 +131,44 @@ class _CustomStackAppBar extends StatelessWidget {
             movie.posterPath,
             fit: BoxFit.cover,
             loadingBuilder: (context, child, loadingProgress) {
-
-              if( loadingProgress != null) return const SizedBox();
+              if (loadingProgress != null) return const SizedBox();
 
               return FadeIn(child: child);
-
             },
           ),
         ),
-        const SizedBox.expand(
-          child: DecoratedBox(
-              decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      stops: [0.7, 1.0],
-                      colors: [Colors.transparent, Colors.black54]))),
+        const _CustomGradient(
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          x: 0.65,
+          y: 1.0,
+          colorOne: Colors.transparent,
+          colorTwo: Colors.black54,
         ),
-        const SizedBox.expand(
-          child: DecoratedBox(
-              decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      stops: [0.7, 1.0],
-                      colors: [Colors.transparent, Colors.black54]))),
+        const _CustomGradient(
+          begin: Alignment.bottomCenter,
+          end: Alignment.bottomCenter,
+          x: 0.7,
+          y: 1.0,
+          colorOne: Colors.transparent,
+          colorTwo: Colors.black45,
         ),
-        const SizedBox.expand(
-          child: DecoratedBox(
-              decoration: BoxDecoration(
-                  gradient: LinearGradient(begin: Alignment.topLeft, stops: [
-            0.0,
-            0.4
-          ], colors: [
-            Colors.black54,
-            Colors.transparent,
-          ]))),
-        )
       ],
     );
   }
 }
 
+// --------------------------------------------------------------------------
+// -------------------------- Detalles de la Película ------------------------
+// --------------------------------------------------------------------------
 class _MovieDetails extends StatefulWidget {
   final Movie movie;
   const _MovieDetails({required this.movie});
 
   @override
   // ignore: no_logic_in_create_state
-  State<_MovieDetails> createState() => _MovieDetailsState(movieId: movie.id.toString());
+  State<_MovieDetails> createState() =>
+      _MovieDetailsState(movieId: movie.id.toString());
 }
 
 class _MovieDetailsState extends State<_MovieDetails> {
@@ -177,8 +185,6 @@ class _MovieDetailsState extends State<_MovieDetails> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
-
         Padding(
           padding: const EdgeInsets.all(8),
           child: Row(
@@ -253,15 +259,13 @@ class _MovieDetailsState extends State<_MovieDetails> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               FilledButton.tonal(
-                onPressed: (){}, 
-                child: const Text('Categorías')
-              ),
+                  onPressed: () {}, child: const Text('Categorías')),
               const SizedBox(height: 10),
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  for ( final genre in widget.movie.genreIds)
+                  for (final genre in widget.movie.genreIds)
                     Chip(
                       label: Text(genre),
                       shape: RoundedRectangleBorder(
@@ -279,11 +283,12 @@ class _MovieDetailsState extends State<_MovieDetails> {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Column(
             children: [
-              FilledButton.tonal(onPressed: (){}, child: const Text('Actores')),
+              FilledButton.tonal(
+                  onPressed: () {}, child: const Text('Actores')),
             ],
           ),
         ),
-        _ActorsByMovie(movieId: movieId ),
+        _ActorsByMovie(movieId: movieId),
         const SizedBox(height: 20),
       ],
     );
@@ -291,19 +296,22 @@ class _MovieDetailsState extends State<_MovieDetails> {
 }
 
 
+// --------------------------------------------------------------------------
+// -------------------------- Actores por Película --------------------------
+// --------------------------------------------------------------------------
 class _ActorsByMovie extends ConsumerWidget {
-
   final String movieId;
   const _ActorsByMovie({required this.movieId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-
     final actorByMovie = ref.watch(actorsByMovieProvider);
 
-    if( actorByMovie[movieId] == null ){
+    if (actorByMovie[movieId] == null) {
       return const Center(
-        child: CircularProgressIndicator(strokeWidth: 2,),
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+        ),
       );
     }
 
@@ -314,7 +322,7 @@ class _ActorsByMovie extends ConsumerWidget {
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: actors.length,
-        itemBuilder: (context, index){
+        itemBuilder: (context, index) {
           final actor = actors[index];
           return Container(
             padding: const EdgeInsets.all(8),
@@ -345,18 +353,52 @@ class _ActorsByMovie extends ConsumerWidget {
                   // Personaje del Actor
                   Text(
                     actor.character ?? '',
-                    style: const TextStyle(fontWeight: FontWeight.bold, overflow: TextOverflow.ellipsis),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        overflow: TextOverflow.ellipsis),
                     textAlign: TextAlign.center,
                     maxLines: 2,
-                    
                   ),
-                  
                 ],
               ),
             ),
           );
         },
       ),
+    );
+  }
+}
+
+
+
+// --------------------------------------------------------------------------
+// -------------------------- Gradiente Personalizado -----------------------
+// --------------------------------------------------------------------------
+class _CustomGradient extends StatelessWidget {
+  final Alignment begin;
+  final Alignment end;
+  final double x;
+  final double y;
+  final Color colorOne;
+  final Color colorTwo;
+
+  const _CustomGradient({
+      required this.begin,
+      required this.end, 
+      required this.x, 
+      required this.y, required this.colorOne, required this.colorTwo,
+    });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.expand(
+      child: DecoratedBox(
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  begin: begin,
+                  end: Alignment.topCenter,
+                  stops: [x, y],
+                  colors: [colorOne, colorTwo]))),
     );
   }
 }
