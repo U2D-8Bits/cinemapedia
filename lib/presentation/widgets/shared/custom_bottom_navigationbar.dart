@@ -9,10 +9,10 @@ class BottomNavigationbar extends StatelessWidget {
 
     switch(index){
       case 0:
-        context.go('/home/2');
+        context.go('/home/0');
         break;
       case 1:
-        context.go('/home/2');
+        context.go('/home/1');
         break;
       case 2:
         context.go('/home/2');
